@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Puppy Store",
+    "slug": "puppy-store",
+    "scheme": "puppystore",
+    "plugins": ["expo-router"],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    },
+    "android": {
+      "package": "com.example.puppystore"
+    },
+    "ios": {
+      "bundleIdentifier": "com.example.puppystore"
+    }
+  }
+}

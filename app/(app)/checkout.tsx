@@ -1,0 +1,155 @@
+import { useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useStripe } from "@stripe/stripe-react-native";
+
+import { AppButton } from "../../components/AppButton";
+import { formatPrice } from "../../lib/format";
+import { createPaymentSheet } from "../../lib/stripe";
+import { useAuthStore } from "../../store/auth";
+import { useCartStore } from "../../store/cart";
+
+export default function CheckoutScreen() {
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const user = useAuthStore((state) => state.user);
+  const items = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const totalCents = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity * item.puppy.priceCents, 0));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const handleCheckout = async () => {
+    if (totalCents <= 0) {
+      setMessage("Add a puppy to the cart before checking out.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      const paymentSheet = await createPaymentSheet(totalCents, user?.email);
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: "Puppy Store",
+        paymentIntentClientSecret: paymentSheet.paymentIntentClientSecret,
+      });
+
+      if (initError) {
+        throw new Error(initError.message);
+      }
+
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        throw new Error(presentError.message);
+      }
+
+      clearCart();
+      setMessage("Payment completed. Your order is ready for fulfillment.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Checkout failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Your order</Text>
+        {items.length === 0 ? <Text style={styles.empty}>Your cart is empty.</Text> : null}
+
+        {items.map((item) => (
+          <View key={item.puppy.id} style={styles.row}>
+            <View style={styles.rowText}>
+              <Text style={styles.itemName}>{item.puppy.name}</Text>
+              <Text style={styles.itemMeta}>{item.quantity} x {formatPrice(item.puppy.priceCents)}</Text>
+            </View>
+            <Text style={styles.itemTotal}>{formatPrice(item.quantity * item.puppy.priceCents)}</Text>
+          </View>
+        ))}
+
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalValue}>{formatPrice(totalCents)}</Text>
+        </View>
+      </View>
+
+      {message ? <Text style={styles.message}>{message}</Text> : null}
+
+      <AppButton title={isSubmitting ? "Processing..." : "Pay with Stripe"} onPress={() => void handleCheckout()} disabled={isSubmitting} />
+      {isSubmitting ? <ActivityIndicator color="#efb82d" /> : null}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: "#07111f",
+  },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  card: {
+    backgroundColor: "#0f172a",
+    borderRadius: 28,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#1f2937",
+    gap: 14,
+  },
+  title: {
+    color: "#f8fafc",
+    fontSize: 26,
+    fontWeight: "900",
+  },
+  empty: {
+    color: "#94a3b8",
+    fontSize: 15,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f2937",
+    gap: 12,
+  },
+  rowText: {
+    flex: 1,
+  },
+  itemName: {
+    color: "#f8fafc",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  itemMeta: {
+    color: "#94a3b8",
+    marginTop: 4,
+  },
+  itemTotal: {
+    color: "#efb82d",
+    fontWeight: "800",
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 8,
+  },
+  totalLabel: {
+    color: "#cbd5e1",
+    fontSize: 16,
+  },
+  totalValue: {
+    color: "#f8fafc",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  message: {
+    color: "#cbd5e1",
+    lineHeight: 22,
+  },
+});

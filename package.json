@@ -1,0 +1,31 @@
+{
+  "name": "puppy-store",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "latest",
+    "@stripe/stripe-react-native": "latest",
+    "@supabase/supabase-js": "latest",
+    "expo": "latest",
+    "expo-router": "latest",
+    "expo-status-bar": "latest",
+    "react": "latest",
+    "react-native": "latest",
+    "react-native-gesture-handler": "latest",
+    "react-native-reanimated": "latest",
+    "react-native-safe-area-context": "latest",
+    "zustand": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "typescript": "latest"
+  }
+}
