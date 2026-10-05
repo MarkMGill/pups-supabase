@@ -1,16 +1,21 @@
 import { useState } from "react";
-import { Link, router } from "expo-router";
+import { Link, Redirect, router } from "expo-router";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AppButton } from "../../components/AppButton";
 import { useAuthStore } from "../../store/auth";
 
 export default function LoginScreen() {
+  const user = useAuthStore((state) => state.user);
   const signIn = useAuthStore((state) => state.signIn);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  if (user) {
+    return <Redirect href="/(app)/home" />;
+  }
 
   return (
     <KeyboardAvoidingView behavior={Platform.select({ ios: "padding", android: undefined })} style={styles.container}>
