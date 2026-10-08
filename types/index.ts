@@ -6,6 +6,7 @@ export type Puppy = {
   priceCents: number;
   imageUrl: string;
   description: string;
+  health: string;
 };
 
 export type AppUser = {

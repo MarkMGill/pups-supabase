@@ -10,6 +10,7 @@ export const seedPuppies: Puppy[] = [
     priceCents: 180000,
     imageUrl: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=900&q=80",
     description: "A calm, affectionate puppy who loves fetch, soft blankets, and family time.",
+    health: "good",
   },
   {
     id: "milo",
@@ -19,6 +20,7 @@ export const seedPuppies: Puppy[] = [
     priceCents: 220000,
     imageUrl: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=900&q=80",
     description: "Playful, compact, and perfect for apartment life with a big personality.",
+    health: "good",
   },
   {
     id: "poppy",
@@ -28,6 +30,7 @@ export const seedPuppies: Puppy[] = [
     priceCents: 195000,
     imageUrl: "https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=900&q=80",
     description: "A bright little herder with a big grin and nonstop curiosity.",
+    health: "good",
   },
 ];
 
@@ -43,6 +46,7 @@ function mapPuppy(row: Record<string, unknown>): Puppy {
     priceCents,
     imageUrl: String(row.image_url ?? row.imageUrl ?? ""),
     description: String(row.description ?? ""),
+    health: String(row.health ?? "good"),
   };
 }
 

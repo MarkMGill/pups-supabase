@@ -5,6 +5,8 @@ import { useStripe } from "@stripe/stripe-react-native";
 import { AppButton } from "../../components/AppButton";
 import { formatPrice } from "../../lib/format";
 import { createPaymentSheet } from "../../lib/stripe";
+import { stripePublishableKey } from "../../lib/config";
+import { withPaymentTimeout } from "../../lib/paymentTimeout";
 import { useAuthStore } from "../../store/auth";
 import { useCartStore } from "../../store/cart";
 
@@ -18,8 +20,14 @@ export default function CheckoutScreen() {
   const totalCents = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity * item.puppy.priceCents, 0));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [progress, setProgress] = useState("Preparing payment...");
 
   const handleCheckout = async () => {
+    if (isSubmitting) return;
+    if (!stripePublishableKey) {
+      setMessage("Stripe checkout is not configured. Add the Stripe publishable key and restart Expo.");
+      return;
+    }
     if (totalCents <= 0) {
       setMessage("Add a puppy to the cart before checking out.");
       return;
@@ -27,18 +35,21 @@ export default function CheckoutScreen() {
 
     setIsSubmitting(true);
     setMessage(null);
+    setProgress("Preparing payment...");
 
     try {
       const paymentSheet = await createPaymentSheet(totalCents, user?.email);
-      const { error: initError } = await initPaymentSheet({
+      setProgress("Loading payment form...");
+      const { error: initError } = await withPaymentTimeout(initPaymentSheet({
         merchantDisplayName: "Puppy Store",
         paymentIntentClientSecret: paymentSheet.paymentIntentClientSecret,
-      });
+      }), "Loading the Stripe payment form timed out. Restart the app and try again.");
 
       if (initError) {
         throw new Error(initError.message);
       }
 
+      setProgress("Complete payment in Stripe...");
       const { error: presentError } = await presentPaymentSheet();
 
       if (presentError) {
@@ -87,7 +98,7 @@ export default function CheckoutScreen() {
 
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
-      <AppButton title={isSubmitting ? "Processing..." : "Pay with Stripe"} onPress={() => void handleCheckout()} disabled={isSubmitting || items.length === 0} />
+      <AppButton title={isSubmitting ? progress : "Pay with Stripe"} onPress={() => void handleCheckout()} disabled={isSubmitting || items.length === 0} />
       {isSubmitting ? <ActivityIndicator color="#efb82d" /> : null}
     </ScrollView>
   );

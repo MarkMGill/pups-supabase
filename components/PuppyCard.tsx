@@ -21,6 +21,7 @@ export function PuppyCard({ puppy, onPress }: Props) {
           <Text style={styles.price}>{formatPrice(puppy.priceCents)}</Text>
         </View>
         <Text style={styles.breed}>{puppy.breed}</Text>
+        <Text style={styles.health}>Health: {puppy.health}</Text>
         <Text style={styles.meta}>{formatAge(puppy.ageMonths)}</Text>
       </View>
     </Pressable>
@@ -69,6 +70,10 @@ const styles = StyleSheet.create({
   breed: {
     color: "#cbd5e1",
     fontSize: 15,
+  },
+  health: {
+    color: "#94a3b8",
+    fontSize: 13,
   },
   meta: {
     color: "#94a3b8",

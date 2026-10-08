@@ -35,6 +35,7 @@ export default function PuppyDetailsScreen() {
           <Text style={styles.meta}>{formatAge(fallbackPuppy.ageMonths)}</Text>
           <Text style={styles.price}>{formatPrice(fallbackPuppy.priceCents)}</Text>
         </View>
+        <Text style={styles.health}>Health: {fallbackPuppy.health}</Text>
         <Text style={styles.description}>{fallbackPuppy.description}</Text>
         <AppButton title="Add to cart" onPress={() => addPuppy(fallbackPuppy)} />
       </View>
@@ -89,6 +90,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   description: {
+    color: "#e2e8f0",
+    fontSize: 15,
+    lineHeight: 24,
+  },
+  health: {
     color: "#e2e8f0",
     fontSize: 15,
     lineHeight: 24,
