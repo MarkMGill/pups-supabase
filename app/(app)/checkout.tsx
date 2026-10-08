@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useStripe } from "@stripe/stripe-react-native";
 
 import { AppButton } from "../../components/AppButton";
@@ -13,6 +13,8 @@ export default function CheckoutScreen() {
   const user = useAuthStore((state) => state.user);
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
+  const addPuppy = useCartStore((state) => state.addPuppy);
+  const removePuppy = useCartStore((state) => state.removePuppy);
   const totalCents = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity * item.puppy.priceCents, 0));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -63,6 +65,15 @@ export default function CheckoutScreen() {
             <View style={styles.rowText}>
               <Text style={styles.itemName}>{item.puppy.name}</Text>
               <Text style={styles.itemMeta}>{item.quantity} x {formatPrice(item.puppy.priceCents)}</Text>
+              <View style={styles.quantityControls}>
+                <Pressable accessibilityRole="button" accessibilityLabel={`Decrease ${item.puppy.name} quantity`} disabled={isSubmitting} onPress={() => { removePuppy(item.puppy.id); setMessage(null); }} style={styles.quantityButton}>
+                  <Text style={styles.quantityText}>−</Text>
+                </Pressable>
+                <Text style={styles.itemMeta}>{item.quantity}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel={`Increase ${item.puppy.name} quantity`} disabled={isSubmitting} onPress={() => { addPuppy(item.puppy); setMessage(null); }} style={styles.quantityButton}>
+                  <Text style={styles.quantityText}>+</Text>
+                </Pressable>
+              </View>
             </View>
             <Text style={styles.itemTotal}>{formatPrice(item.quantity * item.puppy.priceCents)}</Text>
           </View>
@@ -76,13 +87,16 @@ export default function CheckoutScreen() {
 
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
-      <AppButton title={isSubmitting ? "Processing..." : "Pay with Stripe"} onPress={() => void handleCheckout()} disabled={isSubmitting} />
+      <AppButton title={isSubmitting ? "Processing..." : "Pay with Stripe"} onPress={() => void handleCheckout()} disabled={isSubmitting || items.length === 0} />
       {isSubmitting ? <ActivityIndicator color="#efb82d" /> : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  quantityControls: { flexDirection: "row", alignItems: "center", gap: 16, marginTop: 10 },
+  quantityButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#243041", alignItems: "center", justifyContent: "center" },
+  quantityText: { color: "#f8fafc", fontSize: 22 },
   screen: {
     flex: 1,
     backgroundColor: "#07111f",
