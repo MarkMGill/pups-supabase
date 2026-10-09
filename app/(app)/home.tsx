@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { isPuppyAdmin } from "../../lib/puppyAdmin";
 import { router } from "expo-router";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 
@@ -9,6 +11,7 @@ import { useCartStore } from "../../store/cart";
 import { usePuppyStore } from "../../store/puppies";
 
 export default function HomeScreen() {
+  const [isAdmin, setIsAdmin] = useState(false);
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const puppies = usePuppyStore((state) => state.puppies);
@@ -22,6 +25,14 @@ export default function HomeScreen() {
     void loadPuppies();
   }, [loadPuppies]);
 
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    setIsAdmin(false);
+    void isPuppyAdmin().then((allowed) => { if (active) setIsAdmin(allowed); })
+      .catch(() => { if (active) setIsAdmin(false); });
+    return () => { active = false; };
+  }, [user?.id]));
+
   return (
     <View style={styles.screen}>
       <View style={styles.hero}>
@@ -32,6 +43,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.actions}>
+          {isAdmin ? <AppButton title="Add puppy" onPress={() => router.push("/(app)/add-puppy")} /> : null}
           <AppButton title={`Checkout (${itemCount})`} onPress={() => router.push("/(app)/checkout")} />
           <AppButton title="Sign out" onPress={() => void signOut()} variant="ghost" />
         </View>

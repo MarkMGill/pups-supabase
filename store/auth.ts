@@ -22,8 +22,8 @@ function buildLocalUser(email: string, name?: string): AppUser {
   };
 }
 
-function mapSupabaseUser(email: string, fallbackName?: string): AppUser {
-  return buildLocalUser(email, fallbackName);
+function mapSupabaseUser(id: string, email: string, fallbackName?: string): AppUser {
+  return { id, email, name: fallbackName?.trim() || email.split("@")[0] };
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
 
         if (data.user) {
-          set({ user: mapSupabaseUser(data.user.email ?? email, data.user.user_metadata?.name), isLoading: false });
+          set({ user: mapSupabaseUser(data.user.id, data.user.email ?? email, data.user.user_metadata?.name), isLoading: false });
           return;
         }
       }
@@ -70,8 +70,12 @@ export const useAuthStore = create<AuthState>((set) => ({
           throw new Error(error.message);
         }
 
+        if (!data.session) {
+          set({ error: "Check your email to confirm your account, then sign in.", isLoading: false });
+          return;
+        }
         if (data.user) {
-          set({ user: mapSupabaseUser(data.user.email ?? email, name), isLoading: false });
+          set({ user: mapSupabaseUser(data.user.id, data.user.email ?? email, name), isLoading: false });
           return;
         }
       }
