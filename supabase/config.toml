@@ -1,0 +1,7 @@
+project_id = "puppies"
+[functions.create-payment-sheet]
+verify_jwt = true
+[functions.confirm-order]
+verify_jwt = true
+[functions.stripe-webhook]
+verify_jwt = false

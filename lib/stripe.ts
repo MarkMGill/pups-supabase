@@ -1,13 +1,15 @@
-import { currency, supabaseFunctionUrl } from "./config";
+import { supabaseFunctionUrl } from "./config";
 import { supabaseAnonKey } from "./config";
 import { supabase } from "./supabase";
 import { withPaymentTimeout } from "./paymentTimeout";
 
 export type PaymentSheetResponse = {
   paymentIntentClientSecret: string;
+  paymentIntentId: string;
+  amountCents: number;
 };
 
-export async function createPaymentSheet(amountCents: number, email?: string) {
+export async function createPaymentSheet(items: { puppyId: string; quantity: number }[]) {
   if (!supabaseFunctionUrl) {
     throw new Error("Add EXPO_PUBLIC_SUPABASE_FUNCTION_URL before enabling Stripe checkout.");
   }
@@ -30,9 +32,7 @@ export async function createPaymentSheet(amountCents: number, email?: string) {
         apikey: supabaseAnonKey,
       },
       body: JSON.stringify({
-        amountCents,
-        currency,
-        email,
+        items,
       }),
     });
 
@@ -42,7 +42,7 @@ export async function createPaymentSheet(amountCents: number, email?: string) {
       throw new Error(typeof detail === "string" ? detail : `Unable to prepare payment (HTTP ${response.status}).`);
     }
 
-    if (typeof body?.paymentIntentClientSecret !== "string" || !body.paymentIntentClientSecret) {
+    if (typeof body?.paymentIntentClientSecret !== "string" || !body.paymentIntentClientSecret || typeof body?.paymentIntentId !== "string" || !body.paymentIntentId || !Number.isSafeInteger(body?.amountCents)) {
       throw new Error("Payment service returned an invalid response.");
     }
     return body as PaymentSheetResponse;

@@ -7,12 +7,11 @@ import { formatPrice } from "../../lib/format";
 import { createPaymentSheet } from "../../lib/stripe";
 import { stripePublishableKey } from "../../lib/config";
 import { withPaymentTimeout } from "../../lib/paymentTimeout";
-import { useAuthStore } from "../../store/auth";
+import { confirmOrder } from "../../lib/orders";
 import { useCartStore } from "../../store/cart";
 
 export default function CheckoutScreen() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const user = useAuthStore((state) => state.user);
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
   const addPuppy = useCartStore((state) => state.addPuppy);
@@ -38,7 +37,10 @@ export default function CheckoutScreen() {
     setProgress("Preparing payment...");
 
     try {
-      const paymentSheet = await createPaymentSheet(totalCents, user?.email);
+      const paymentSheet = await createPaymentSheet(items.map((item) => ({ puppyId: item.puppy.id, quantity: item.quantity })));
+      if (paymentSheet.amountCents !== totalCents) {
+        throw new Error("A puppy's price has changed. Refresh the catalog and review your cart before paying.");
+      }
       setProgress("Loading payment form...");
       const { error: initError } = await withPaymentTimeout(initPaymentSheet({
         merchantDisplayName: "Puppy Store",
@@ -57,7 +59,13 @@ export default function CheckoutScreen() {
       }
 
       clearCart();
-      setMessage("Payment completed. Your order is ready for fulfillment.");
+      setProgress("Confirming your order...");
+      try {
+        const paid = await confirmOrder(paymentSheet.paymentIntentId);
+        setMessage(paid ? "Payment confirmed. Your order has been saved." : "Your order has been saved and payment confirmation is pending. Please do not pay again.");
+      } catch {
+        setMessage("Your order has been saved. Payment confirmation is pending; please do not pay again. Contact us if it does not update.");
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Checkout failed.");
     } finally {
