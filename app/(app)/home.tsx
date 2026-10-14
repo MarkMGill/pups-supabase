@@ -45,6 +45,8 @@ export default function HomeScreen() {
         <View style={styles.actions}>
           {isAdmin ? <AppButton title="Add puppy" onPress={() => router.push("/(app)/add-puppy")} /> : null}
           <AppButton title={`Checkout (${itemCount})`} onPress={() => router.push("/(app)/checkout")} />
+          {/* This controls button visibility; the order query and RLS enforce account access. */}
+          {user ? <AppButton title="My orders" onPress={() => router.push("/(app)/orders")} variant="ghost" /> : null}
           <AppButton title="Sign out" onPress={() => void signOut()} variant="ghost" />
         </View>
       </View>
