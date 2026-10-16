@@ -14,12 +14,19 @@ export default function HomeScreen() {
   const [isAdmin, setIsAdmin] = useState(false);
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
+  const isSigningOut = useAuthStore((state) => state.isLoading);
+  const authError = useAuthStore((state) => state.error);
   const puppies = usePuppyStore((state) => state.puppies);
   const isLoading = usePuppyStore((state) => state.isLoading);
   const error = usePuppyStore((state) => state.error);
   const loadPuppies = usePuppyStore((state) => state.loadPuppies);
   const addPuppy = useCartStore((state) => state.addPuppy);
   const itemCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
+
+  async function handleSignOut() {
+    // Only leave the catalog once Supabase has successfully cleared the session.
+    if (await signOut()) router.replace("/(auth)/login");
+  }
 
   useEffect(() => {
     void loadPuppies();
@@ -44,15 +51,17 @@ export default function HomeScreen() {
 
         <View style={styles.actions}>
           {isAdmin ? <AppButton title="Add puppy" onPress={() => router.push("/(app)/add-puppy")} /> : null}
+          {isAdmin ? <AppButton title="Admin orders" onPress={() => router.push("/(app)/admin-orders")} variant="ghost" /> : null}
           <AppButton title={`Checkout (${itemCount})`} onPress={() => router.push("/(app)/checkout")} />
           {/* This controls button visibility; the order query and RLS enforce account access. */}
           {user ? <AppButton title="My orders" onPress={() => router.push("/(app)/orders")} variant="ghost" /> : null}
-          <AppButton title="Sign out" onPress={() => void signOut()} variant="ghost" />
+          <AppButton title={isSigningOut ? "Signing out..." : "Sign out"} onPress={() => void handleSignOut()} disabled={isSigningOut} variant="ghost" />
         </View>
       </View>
 
       {isLoading ? <ActivityIndicator color="#efb82d" /> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
+      {authError ? <Text style={styles.error}>{authError}</Text> : null}
 
       <FlatList
         data={puppies}

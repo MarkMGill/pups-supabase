@@ -9,7 +9,7 @@ type AuthState = {
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<boolean>;
 };
 
 function buildLocalUser(email: string, name?: string): AppUser {
@@ -97,8 +97,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       set({ user: null, isLoading: false });
+      return true;
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "Unable to sign out.", isLoading: false });
+      return false;
     }
   },
 }));
